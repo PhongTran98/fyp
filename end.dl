@@ -1,0 +1,34 @@
+.decl Endpoint(param:paramOrderType)
+
+// TODO: beware of block
+Endpoint([id, isOut, 0]) :- 
+	(
+		isOut = 0, InstSig(id, nParams, _), nParams > 0;
+		isOut = 1, InstSig(id, _, nResults), nResults > 0
+	).
+	
+
+Endpoint([id, isOut, order + 1]) :-
+	InstSig(id, nParams, nResults),
+	Endpoint([id, isOut, order]),
+	(
+		isOut = 0, order + 1 < nParams;
+		isOut = 1, order + 1 < nResults
+	).
+
+
+.decl EndpointLabel(param:paramOrderType, label:symbol)
+EndpointLabel([id, x, y], label) :-
+	Endpoint([id, x, y]), 
+	(
+		Const(id, _, label) ; 
+
+		( Load(id, _, _) ; Store(id, _, _) ), 
+		FlowDirect(src, [id, x, y]), 
+		EndpointLabel(src, label) ;
+		
+		_getvar(id, label);
+		_setvar(id, label);
+
+		Entry(id, idFunc), AstEdge(idFunc, _id, _), Param(_id, label, y, _), x = 1
+	).

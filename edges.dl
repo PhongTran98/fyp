@@ -1,0 +1,21 @@
+
+
+.decl AstEdge(src:unsigned, dest:unsigned, order: unsigned)
+.decl CfgEdge(src:unsigned, dest:unsigned, label:symbol)
+.decl PdgEdge(src:unsigned, dest:unsigned, label:symbol, pdgType:symbol, constType:symbol, constValueI:number, constValueF:float)
+.decl CgEdge(src:unsigned, dest:unsigned)
+.decl PgEdge(src:unsigned, dest:unsigned)
+
+AstEdge(src, dest, order) :- edge(src, dest, "AST", _, _, _, _, _, order).
+CfgEdge(src, dest, label) :- edge(src, dest, "CFG", label, _, _, _, _, _).
+PdgEdge(src, dest, label, pdgType, constType, constValueI, constValueF) :- edge(src, dest, "PDG", label, pdgType, constType, constValueI, constValueF, _).
+CgEdge(src, dest) :- edge(src, dest, "CG", _, _, _, _, _, _).
+PgEdge(src, dest) :- edge(src, dest, "CG", _, _, _, _, _, _).
+
+.decl reachCfg(src:unsigned, dest:unsigned)
+reachCfg(src, dest) :- CfgEdge(src, dest, _).
+reachCfg(src, dest) :- reachCfg(src, x), CfgEdge(x, dest, _).
+
+.decl reachAst(src:unsigned, dest:unsigned)
+reachAst(src, dest) :- AstEdge(src, dest, _).
+reachAst(src, dest) :- reachAst(src, x), CfgEdge(x, dest, _).

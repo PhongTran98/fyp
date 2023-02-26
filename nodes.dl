@@ -1,0 +1,36 @@
+/*
+.decl node(id:unsigned, nodeType:symbol, name:symbol, index:unsigned, nargs:unsigned, nlocals:unsigned, \
+			nresults:unsigned, isImport:bool, isExport:bool, varType:symbol, instType:symbol, \
+			opcode:symbol, constType:numtypelabel, constValueI:number, constValueF:float, \
+			label:symbol, offset:unsigned, hasElse:bool)
+*/
+
+.decl Instruction(id:unsigned, instType:symbol, opcode:symbol, constType:numtypelabel, constValueI:number,
+ constValueF:float, label:symbol, offset:unsigned, hasElse:bool) 
+
+Instruction(id, instType, opcode, constType, constValueI, constValueF, label, offset, hasElse) :- 
+    node(id, "Instruction", _, _, _, _, _, _, _, _,  instType, opcode, constType, constValueI, constValueF, label, offset, hasElse). 
+
+
+.decl Function(id:unsigned, name:symbol, index:unsigned, nargs:unsigned, nlocals:unsigned, nresults:unsigned)
+
+Function(id, name, index, nargs, nlocals, nresults) :-
+	node(id, "Function", name, index, nargs, nlocals, nresults, _, _, _, _, _, _, _, _, _, _, _).
+
+
+.decl Param(id:unsigned, name:symbol, index:unsigned, varType:symbol)
+
+Param(id, name, index, varType) :-
+	node(id, "Param", name, index, _, _, _, _, _, varType, _, _, _, _, _, _, _, _).
+
+
+.decl Local(id:unsigned, name:symbol, index:unsigned, varType:symbol)
+
+Local(id, name, index, varType) :-
+	node(id, "Local", name, index, _, _, _, _, _, varType, _, _, _, _, _, _, _, _).
+
+
+.decl Result(id:unsigned, name:symbol, index:unsigned, varType:symbol)
+
+Result(id, name, index, varType) :-
+	node(id, "Result", name, index, _, _, _, _, _, varType, _, _, _, _, _, _, _, _).

@@ -1,0 +1,72 @@
+.decl DataFlow(paramOut:paramOrderType, paramIn:paramOrderType)
+DataFlow(x, y) :- FlowDirect(x, y).
+DataFlow(x, y) :- FlowIndirect(x, y).
+
+
+// case through stack
+.decl FlowDirect(paramOut:paramOrderType, paramIn:paramOrderType)
+FlowDirect(p1, p2) :- 
+	Endpoint(p1), Endpoint(p2),
+	p1 = [idSrc, 1, 0], p2 = [idDst, 0, orderIn],
+	AstEdge(idDst, idSrc, orderIn).
+
+
+// case through variable or linear memory
+.decl FlowIndirect(paramOut:paramOrderType, paramIn:paramOrderType)
+
+FlowIndirect([idSrc, isOut, order], [idDst, 1, 0]) :-
+	reachArg([idSrc, isOut, order], idDst),
+	mayReadBy(idSrc, idDst).
+
+
+.decl overwrittenBy(id1:unsigned, id2:unsigned) 
+overwrittenBy(id1, id2) :-
+	( _getvar(id1, var) ; _setvar(id1, var) ),
+	_setvar(id2, var),
+	reachCfg(id1, id2), 
+	id1 != id2.
+
+overwrittenBy(id1, id2) :-
+	( Store(id1, offset, size) ; Load(id1, offset, size) ),
+	Store(id2, offset, size),
+	EndpointLabel([id1, 0, 0], label), 
+	EndpointLabel([id2, 0, 0], label),
+	reachCfg(id1, id2), 
+	id1 != id2.
+
+
+.decl mayReadBy(id1:unsigned, id2:unsigned)
+
+mayReadBy(id1, id2) :-
+	( _getvar(id1, var) ; _setvar(id1, var) ),
+	_getvar(id2, var),
+	reachCfg(id1, id2), 
+	id1 != id2.
+
+// use EndpointLabel instead of equal 
+// to avoid stratification error
+mayReadBy(id1, id2) :- 
+	( Store(id1, offset, size) ; Load(id1, offset, size) ),
+	Load(id2, offset, size),
+	EndpointLabel([id1, 0, 0], label), 
+	EndpointLabel([id2, 0, 0], label),
+	reachCfg(id1, id2), 
+	id1 != id2.
+
+
+.decl reachArg(param:paramOrderType, id:unsigned) 
+
+reachArg([idSrc, isOut, order], id) :-
+	(
+		_getvar(idSrc, _), isOut = 1, order = 0;
+		_setvar(idSrc, _), isOut = 0, order = 0;
+		Store(idSrc, _, _), isOut = 0, order = 1;
+		Load(idSrc, _, _), isOut = 1, order = 0
+	),
+	CfgEdge(idSrc, id, _).
+
+reachArg([idSrc, isOut, order], id2) :- 
+	reachArg([idSrc, isOut, order], id), CfgEdge(id, id2, _), 
+	!overwrittenBy(idSrc, id).
+
+

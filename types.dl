@@ -1,0 +1,7 @@
+// 0 or 1
+.type bool <: unsigned
+
+// i32, i64, f32, f64
+.type numtypelabel <: symbol
+.type numtype = [i:unsigned, f:float]
+.type paramOrderType = [id: unsigned, isOut:bool, order:unsigned]

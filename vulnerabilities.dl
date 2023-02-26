@@ -1,0 +1,10 @@
+.decl uaf(id1:unsigned, f1:symbol, id2:unsigned, f2:symbol)
+uaf(id1, f1, id2, f2) :- 
+	Instruction(id1, _, _, _, _, _, _, _, _),
+	Instruction(id2, _, _, _, _, _, _, _, _),
+	Endpoint([id1, 0, 0]),
+	Endpoint([id2, 0, x]),
+	CallFree(id1),
+	reachCfg(id1, id2),
+	equal([id1, 0, 0], [id2, 0, x]),
+	getFunction(id1, _, f1), getFunction(id2, _, f2).

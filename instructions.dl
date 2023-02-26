@@ -1,0 +1,114 @@
+/*
+.decl Instruction(id:unsigned, instType:symbol, opcode:symbol, constType:numtypelabel, constValueI:number,
+ constValueF:float, label:symbol, offset:unsigned, hasElse:bool) 
+ */
+
+.decl isInst(id:unsigned)
+isInst(id) :- Instruction(id, _, _, _, _, _, _, _, _).
+
+.decl InstSig(id:unsigned, in:unsigned, out:unsigned)
+InstSig(id, 0, 1) :- Const(id, _, _).
+InstSig(id, 1, 1) :- Operation(id, "Unary", _).
+InstSig(id, 2, 1) :- Operation(id, "Binary", _).
+InstSig(id, 1, 1) :- Operation(id, "Test", _).
+InstSig(id, 1, 1) :- Operation(id, "Convert", _).
+InstSig(id, 2, 1) :- Operation(id, "Compare", _).
+
+InstSig(id, 0, 1) :- GlobalGet(id, _).
+InstSig(id, 0, 1) :- LocalGet(id, _).
+InstSig(id, 1, 0) :- GlobalSet(id, _).
+InstSig(id, 1, 0) :- LocalSet(id, _).
+InstSig(id, 1, 1) :- LocalTee(id, _).
+
+InstSig(id, 1, 1) :- Load(id, _, _).
+InstSig(id, 2, 0) :- Store(id, _, _).
+
+InstSig(id, nargs, nresults) :- 
+    Call(id, funcNodeId),
+    FuncSig(funcNodeId, nargs, _, nresults).  
+
+// "Entry" instruction generates function parameters
+InstSig(id, 0, nresults) :- 
+    Entry(id, funcNodeId),
+    FuncSig(funcNodeId, nresults, _, _).  
+
+// "Return" instruction takes in function returns
+InstSig(id, nargs, 0) :- 
+    Return(id, funcNodeId),
+    FuncSig(funcNodeId, _, _, nargs).  
+
+// Numeric instructions
+.decl Const(id:unsigned, type:numtypelabel, value:symbol) 
+Const(id, type, to_string(valueI)) :- Instruction(id, "Const", _, type, valueI, _, _, _, _), contains("i", type).
+Const(id, type, to_string(valueF)) :- Instruction(id, "Const", _, type, _, valueF, _, _, _), contains("f", type).
+
+.decl Operation(id:unsigned, instType:symbol, op:symbol)
+Operation(id, "Unary", op) :- Instruction(id, "Unary", op, _, _, _, _, _, _).
+Operation(id, "Binary", op) :- Instruction(id, "Binary", op, _, _, _, _, _, _).
+Operation(id, "Compare", op) :- Instruction(id, "Compare", op, _, _, _, _, _, _).
+Operation(id, "Test", op) :- Instruction(id, "Convert", op, _, _, _, _, _, _),
+contains(".eqz", op).
+Operation(id, "Convert", op) :- Instruction(id, "Convert", op, _, _, _, _, _, _),
+!contains("eqz", op).
+
+// Variable instructions
+
+.decl GlobalGet(id:unsigned, var:symbol)
+GlobalGet(id, var) :- Instruction(id, "GlobalGet", _, _, _, _, var, _, _).
+
+.decl GlobalSet(id:unsigned, var:symbol)
+GlobalSet(id, var) :- Instruction(id, "GlobalSet", _, _, _, _, var, _, _).
+
+.decl LocalGet(id:unsigned, var:symbol)
+LocalGet(id, var) :- Instruction(id, "LocalGet", _, _, _, _, var, _, _).
+
+.decl LocalSet(id:unsigned, var:symbol)
+LocalSet(id, var) :- Instruction(id, "LocalSet", _, _, _, _, var, _, _).
+
+.decl LocalTee(id:unsigned, var:symbol)
+LocalTee(id, var) :- Instruction(id, "LocalTee", _, _, _, _, var, _, _).
+
+// helper get/set
+.decl _getvar(id:unsigned, var:symbol)
+_getvar(id, var) :- GlobalGet(id, var).
+_getvar(id, var) :- LocalGet(id, var).
+
+.decl _setvar(id:unsigned, var:symbol)
+_setvar(id, var) :- GlobalSet(id, var).
+_setvar(id, var) :- LocalSet(id, var).
+_setvar(id, var) :- LocalTee(id, var).
+
+// Memory instructions
+
+.decl Store(id:unsigned, offset:unsigned, size:unsigned)
+Store(id, offset, 4) :- Instruction(id, "Store", "i32.store", _, _, _, _, offset, _).
+Store(id, offset, 8) :- Instruction(id, "Store", "i64.store", _, _, _, _, offset, _).
+
+.decl Load(id:unsigned, offset:unsigned, size:unsigned)
+Load(id, offset, 4) :- Instruction(id, "Load", "i32.load", _, _, _, _, offset, _).
+Load(id, offset, 8) :- Instruction(id, "Load", "i64.load", _, _, _, _, offset, _).
+
+// Control instructions
+.decl Call(id:unsigned, funcNodeId:unsigned)
+Call(id, funcNodeId) :- 
+    Instruction(id, "Call", _, _, _, _, funcName, _, _),
+    FuncName(funcNodeId, funcName).
+
+.decl CallFree(id:unsigned)
+CallFree(id) :- 
+    Call(id, funcNodeId),
+    FuncName(funcNodeId, "$dlfree").
+
+// Custom instructions
+.decl Entry(id:unsigned, funcNodeId:unsigned)
+Entry(id, funcNodeId) :-
+    Instruction(id, "Entry", _, _, _, _, _, _, _),
+    AstEdge(funcNodeId, id, _),
+    Function(funcNodeId, _, _, _, _, _).
+
+
+.decl Return(id:unsigned, funcNodeId:unsigned)
+Return(id, funcNodeId) :-
+    Instruction(id, "Return", _, _, _, _, _, _, _),
+    AstEdge(funcNodeId, id, _),
+    Function(funcNodeId, _, _, _, _, _).

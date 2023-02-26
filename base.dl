@@ -1,0 +1,95 @@
+/*
+-- Nodes
+id: node id
+nodeType: Module, Function, Locals, VarNode, Instruction, ...
+name: name of Function or VarNode (node of argument), otherwise None
+index: index of Function or VarNode, otherwise 0
+nargs, nlocals, nresults: number of argument, local, result variables for Function, otherwise 0
+...
+*/
+.decl _node(id:unsigned, nodeType:symbol, name:symbol, index:unsigned, nargs:unsigned, nlocals:unsigned, \
+			nresults:unsigned, isImport:bool, isExport:bool, varType:symbol, instType:symbol, \
+			opcode:symbol, constType:numtypelabel, constValueI:number, constValueF:float, \
+			label:symbol, offset:unsigned, hasElse:bool) 
+
+/*
+-- Edges
+src, dest: source and destination node id
+edgeType: AST, CFG, PDG, CG
+label: None for AST, empty string or true/false for CFG (t/f if branch) and the dependency for PDG (e.g. $g0, i32.const 0)
+pdgType: Const, Function, Global, Local
+constType: None, except for (edgeType=PDG, pdgType=Const), then constType=i32, i64, f32, f64
+constValueI, constValueF: value of const if (edgeType=PDG, pdgType=Const), otherwise 0
+astOrder: the order among the sibling in AST tree if (edgeType=AST), otherwise 0
+*/
+
+.decl _edge(src:unsigned, dest:unsigned, edgeType:symbol, label:symbol, pdgType:symbol, constType:symbol, \
+			constValueI:number, constValueF:float, astOrder:unsigned)
+
+
+.decl node(id:unsigned, nodeType:symbol, name:symbol, index:unsigned, nargs:unsigned, nlocals:unsigned, \
+			nresults:unsigned, isImport:bool, isExport:bool, varType:symbol, instType:symbol, \
+			opcode:symbol, constType:numtypelabel, constValueI:number, constValueF:float, \
+			label:symbol, offset:unsigned, hasElse:bool)
+
+.decl _astParentNodeType(id:unsigned, parentType:symbol) 
+
+_astParentNodeType(id, parentType) :-
+	_node(id, "VarNode", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_edge(srcId, id, "AST", _, _, _, _, _, _),
+	_node(srcId, parentType, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
+
+// delete FunctionSignature, Parameters, Locals, Results, Trap
+// channge VarNode to Param, Local, Result; change Instructions to Entry
+node(id, nodeType, name, index, nargs, nlocals, nresults, isImport, isExport, varType, instType, opcode, constType, constValueI, constValueF, label, offset, hasElse) :-	
+	_node(id, _nodeType, name, index, nargs, nlocals, nresults, isImport, isExport, varType, instType, opcode, constType, constValueI, constValueF, label, offset, hasElse), 
+	_nodeType != "FunctionSignature", _nodeType != "Parameters", _nodeType != "Locals", 
+	_nodeType != "Results", _nodeType != "Trap", _nodeType != "Instructions",
+	(
+		_nodeType != "VarNode", nodeType = _nodeType;		
+		nodeType = "Param", _nodeType = "VarNode", _astParentNodeType(id, parentType), parentType = "Parameters";
+		nodeType = "Local", _nodeType = "VarNode", _astParentNodeType(id, parentType), parentType = "Locals";
+		nodeType = "Result", _nodeType = "VarNode", _astParentNodeType(id, parentType), parentType = "Results"
+	).
+
+node(id, "Instruction", "None", 0, 0, 0, 0, 0, 0, "None", "Entry", "None", "None", 0, 0, "None", 0, 0) :-	
+	_node(id, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
+
+
+.decl edge(src:unsigned, dest:unsigned, edgeType:symbol, label:symbol, pdgType:symbol, constType:symbol, \
+			constValueI:number, constValueF:float, astOrder:unsigned)
+
+// remove edge with deleted endpoint
+edge(src, dest, edgeType, label, pdgType, constType, constValueI, constValueF, astOrder) :-
+	_edge(src, dest, edgeType, label, pdgType, constType, constValueI, constValueF, astOrder),
+	_node(src, _type1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_node(dest, _type2, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_type1 != "FunctionSignature", _type1 != "Parameters", _type1 != "Locals", 
+	_type1 != "Results", _type1 != "Trap", _type1 != "Instructions",
+	_type2 != "FunctionSignature", _type2 != "Parameters", _type2 != "Locals", 
+	_type2 != "Results", _type2 != "Trap", _type2 != "Instructions".
+
+// connect Function node to children of Parameters, Locals, Results in AST
+edge(src, dest, "AST", "None", "None", "None", 0, 0, 0) :-
+	_edge(src, funcSigId, "AST", _, _, _, _, _, _),
+	_node(funcSigId, "FunctionSignature", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_edge(funcSigId, groupId, "AST", _, _, _, _, _, _), 
+	_node(groupId, groupType, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	(groupType = "Parameters" ; groupType = "Locals" ; groupType = "Results"),
+	_edge(groupId, dest, "AST", _, _, _, _, _, _).
+
+// connect Function node to children of Instructions in AST
+edge(src, dest, "AST", "None", "None", "None", 0, 0, 0) :-
+	_edge(src, instructionsId, "AST", _, _, _, _, _, _),
+	_node(instructionsId, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_edge(instructionsId, dest, "AST", _, _, _, _, _, _).
+
+// connect Entry (used to be Instructions) to first instruction in CFG
+edge(src, dest, "CFG", "None", "None", "None", 0, 0, 0) :-
+	_edge(src, dest, "CFG", _, _, _, _, _, _),
+	_node(src, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
+
+// connect Function to  Entry (used to be Instructions) in AST
+edge(src, dest, "AST", "None", "None", "None", 0, 0, 0) :-
+	_edge(src, dest, "AST", _, _, _, _, _, _),
+	_node(dest, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).

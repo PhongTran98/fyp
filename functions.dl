@@ -1,0 +1,24 @@
+
+.decl getFunction(id:unsigned, idFunc:unsigned, name:symbol)
+
+// get the function that an instruction belong to
+getFunction(id, idFunc, name) :-
+	Instruction(id, _, _, _, _, _, _, _, _),
+	Function(idFunc, name, _, _, _, _),
+	reachAst(idFunc, id).
+
+.decl FunctionInScope(name:symbol)
+
+.decl inScope(id:unsigned)
+inScope(id) :-
+	getFunction(id, _, name),
+	FunctionInScope(name).
+
+.decl FuncName(id:unsigned, name:symbol)
+
+FuncName(id, name) :- Function(id, name, _, _, _, _).
+
+.decl FuncSig(id:unsigned, nargs:unsigned, nlocals:unsigned, nresults:unsigned)
+
+FuncSig(id, nargs, nlocals, nresults) :-
+	Function(id, _, _, nargs, nlocals, nresults).

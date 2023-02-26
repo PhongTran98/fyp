@@ -1,0 +1,32 @@
+#include "base.dl"
+#include "types.dl"
+#include "nodes.dl"
+#include "edges.dl"
+#include "instructions.dl"
+#include "functions.dl"
+#include "alias.dl"
+#include "end.dl"
+#include "dataflow.dl"
+#include "vulnerabilities.dl"
+
+.input _edge(IO=file, delimiter=",", filename="edge.facts")
+.input _node(IO=file, delimiter=",", filename="node.facts")
+
+.decl test(str:symbol)
+test(str) :-
+	node(_, str, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
+
+.output Entry
+.output EndpointLabel
+
+FunctionInScope(name) :-
+	contains("$CWE", name), 
+	getFunction(_, _, name).
+
+FunctionInScope("$goodB2G1").
+FunctionInScope("$goodB2G2").
+FunctionInScope("$goodG2B1").
+FunctionInScope("$goodG2B2").
+FunctionInScope("$main").
+FunctionInScope("$__original_main").
+FunctionInScope("$dangerous_func").

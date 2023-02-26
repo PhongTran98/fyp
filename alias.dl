@@ -1,0 +1,37 @@
+.decl equal_core(param1:paramOrderType, param2:paramOrderType)
+
+// case through dataflow
+equal_core(x, y) :- DataFlow(x, y).
+
+// case const, change to value analysis later
+equal_core([id1, 1, 0], [id2, 1, 0]) :- 
+	Const(id1, _, const1), Const(id2, _, const2), const1 = const2.
+
+
+.decl intraFuncEqual(param1:paramOrderType, param2:paramOrderType) 
+
+intraFuncEqual([a1, a2, a3], [b1, b2, b3]) :-
+	equal_core([a1, a2, a3], [b1, b2, b3]), 
+	getFunction(a1, idFunc, _), getFunction(b1, idFunc, _),
+	inScope(a1), inScope(b1).
+
+
+.decl equal(param1:paramOrderType, param2:paramOrderType) 
+
+equal(x, y) :- intraFuncEqual(x, y).
+
+equal(x, y) :- equal(y, x).
+
+equal([id1, isOut1, order1], [id2, isOut2, order2]) :-
+	p1 = [id1, isOut1, order1], p2 = [id2, isOut2, order2],
+	p3 = [id3, isOut3, order3],
+	equal(p1, p3), equal(p3, p2),
+	( 
+		reachCfg(id1, id3), reachCfg(id3, id2) ;
+		reachCfg(id3, id1), reachCfg(id3, id2) 
+	).
+
+
+
+
+
