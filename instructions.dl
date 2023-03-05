@@ -97,7 +97,14 @@ Call(id, funcNodeId) :-
 .decl CallFree(id:unsigned)
 CallFree(id) :- 
     Call(id, funcNodeId),
-    FuncName(funcNodeId, "$dlfree").
+    FuncName(funcNodeId, name),
+    FreeFuncName(name).
+
+.decl CallPrintf(id:unsigned)
+CallPrintf(id) :-
+    Call(id, funcNodeId), 
+    FuncName(funcNodeId, name),
+    PrintfFuncName(name).
 
 // Custom instructions
 .decl Entry(id:unsigned, funcNodeId:unsigned)

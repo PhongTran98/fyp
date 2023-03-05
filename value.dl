@@ -1,0 +1,6 @@
+.decl value(param: paramOrderType, value:number)
+
+value(p, val) :-
+	equal(p, [id, 1, 0]), 
+	Const(id, _, valueSymbol), 
+	val = to_number(valueSymbol).

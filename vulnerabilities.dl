@@ -1,10 +1,22 @@
-.decl uaf(id1:unsigned, f1:symbol, id2:unsigned, f2:symbol)
-uaf(id1, f1, id2, f2) :- 
+.decl uaf(func:symbol, id1:unsigned, id2:unsigned)
+uaf(func, id1, id2) :- 
 	Instruction(id1, _, _, _, _, _, _, _, _),
 	Instruction(id2, _, _, _, _, _, _, _, _),
+	getFunction(id1, _, func), getFunction(id2, _, func),
+
 	Endpoint([id1, 0, 0]),
-	Endpoint([id2, 0, x]),
 	CallFree(id1),
-	reachCfg(id1, id2),
+
+	Endpoint([id2, 0, x]),
 	equal([id1, 0, 0], [id2, 0, x]),
-	getFunction(id1, _, f1), getFunction(id2, _, f2).
+	reachCfg(id1, id2).
+// heuristic: if function call using literal string
+// then the arg is a const value (pointing to .rodata)
+.decl fmtStr(func:symbol, id:unsigned)
+fmtStr(func, id) :-
+	Instruction(id, _, _, _, _, _, _, _, _),
+	getFunction(id, _, func),
+
+	Endpoint([id, 0, 0]),
+	CallPrintf(id),
+	!value([id, 0, 0], _).

@@ -4,8 +4,9 @@
 #include "edges.dl"
 #include "instructions.dl"
 #include "functions.dl"
-#include "alias.dl"
 #include "end.dl"
+#include "alias.dl"
+#include "value.dl"
 #include "dataflow.dl"
 #include "vulnerabilities.dl"
 
@@ -16,8 +17,7 @@
 test(str) :-
 	node(_, str, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
 
-.output Entry
-.output EndpointLabel
+.output fmtStr
 
 FunctionInScope(name) :-
 	contains("$CWE", name), 
@@ -28,5 +28,12 @@ FunctionInScope("$goodB2G2").
 FunctionInScope("$goodG2B1").
 FunctionInScope("$goodG2B2").
 FunctionInScope("$main").
+FunctionInScope("$printWrapper").
 FunctionInScope("$__original_main").
 FunctionInScope("$dangerous_func").
+
+.decl FreeFuncName(name:symbol)
+FreeFuncName("$dlfree").
+
+.decl PrintfFuncName(name:symbol)
+PrintfFuncName("$printf").

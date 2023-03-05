@@ -24,7 +24,7 @@ EndpointLabel([id, x, y], label) :-
 		Const(id, _, label) ; 
 
 		( Load(id, _, _) ; Store(id, _, _) ), 
-		FlowDirect(src, [id, x, y]), 
+		DataEdge_Stack(src, [id, x, y]), 
 		EndpointLabel(src, label) ;
 		
 		_getvar(id, label);

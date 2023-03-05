@@ -1,24 +1,30 @@
-.decl DataFlow(paramOut:paramOrderType, paramIn:paramOrderType)
-DataFlow(x, y) :- FlowDirect(x, y).
-DataFlow(x, y) :- FlowIndirect(x, y).
+.decl DataEdge(paramOut:paramOrderType, paramIn:paramOrderType, mayChanged:bool)
+DataEdge(x, y, 0) :- DataEdge_Stack(x, y).
+DataEdge(x, y, 0) :- DataEdge_VarOrMem(x, y).
+DataEdge(x, y, 1) :- DataEdge(x, y, 0).
+DataEdge(x, y, 1) :- DataEdge_Arith(x, y).
+
+.decl DataFlow(paramOut:paramOrderType, paramIn:paramOrderType, mayChanged:bool)
+DataFlow(x, y, i) :- DataEdge(x, z, i), DataEdge(z, y, i).
+DataFlow(x, y, i) :- DataFlow(x, z, i), DataEdge(z, y, i).
 
 
 // case through stack
-.decl FlowDirect(paramOut:paramOrderType, paramIn:paramOrderType)
-FlowDirect(p1, p2) :- 
+.decl DataEdge_Stack(paramOut:paramOrderType, paramIn:paramOrderType)
+DataEdge_Stack(p1, p2) :- 
 	Endpoint(p1), Endpoint(p2),
 	p1 = [idSrc, 1, 0], p2 = [idDst, 0, orderIn],
 	AstEdge(idDst, idSrc, orderIn).
 
 
 // case through variable or linear memory
-.decl FlowIndirect(paramOut:paramOrderType, paramIn:paramOrderType)
+.decl DataEdge_VarOrMem(paramOut:paramOrderType, paramIn:paramOrderType)
 
-FlowIndirect([idSrc, isOut, order], [idDst, 1, 0]) :-
+DataEdge_VarOrMem([idSrc, isOut, order], [idDst, 1, 0]) :-
 	reachArg([idSrc, isOut, order], idDst),
 	mayReadBy(idSrc, idDst).
 
-
+// write-after-read + write-after-write
 .decl overwrittenBy(id1:unsigned, id2:unsigned) 
 overwrittenBy(id1, id2) :-
 	( _getvar(id1, var) ; _setvar(id1, var) ),
@@ -34,7 +40,7 @@ overwrittenBy(id1, id2) :-
 	reachCfg(id1, id2), 
 	id1 != id2.
 
-
+// read-after-read + read-after-write
 .decl mayReadBy(id1:unsigned, id2:unsigned)
 
 mayReadBy(id1, id2) :-
@@ -43,17 +49,21 @@ mayReadBy(id1, id2) :-
 	reachCfg(id1, id2), 
 	id1 != id2.
 
-// use EndpointLabel instead of equal 
-// to avoid stratification error
+// use DataFlow instead of equal to avoid stratification error
 mayReadBy(id1, id2) :- 
 	( Store(id1, offset, size) ; Load(id1, offset, size) ),
 	Load(id2, offset, size),
-	EndpointLabel([id1, 0, 0], label), 
-	EndpointLabel([id2, 0, 0], label),
+	(
+		DataFlow([id1, 0, 0], [id2, 0, 0], 0) ;
+		DataFlow(p, [id1, 0, 0], 0), DataFlow(p, [id2, 0, 0], 0)
+	),
+	//EndpointLabel([id1, 0, 0], label),
+	//EndpointLabel([id2, 0, 0], label),
 	reachCfg(id1, id2), 
 	id1 != id2.
 
-
+// whether their is a "flow" from param to id
+// with no write to param in between
 .decl reachArg(param:paramOrderType, id:unsigned) 
 
 reachArg([idSrc, isOut, order], id) :-
@@ -69,4 +79,9 @@ reachArg([idSrc, isOut, order], id2) :-
 	reachArg([idSrc, isOut, order], id), CfgEdge(id, id2, _), 
 	!overwrittenBy(idSrc, id).
 
-
+// case through arithmetic operations
+.decl DataEdge_Arith(paramOut:paramOrderType, paramIn:paramOrderType)
+DataEdge_Arith([id, 0, order1], [id, 1, order2]) :- 
+	Endpoint([id, 0, order1]), 
+	Endpoint([id, 1, order2]),
+	Operation(id, _, _).

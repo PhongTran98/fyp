@@ -1,7 +1,7 @@
 .decl equal_core(param1:paramOrderType, param2:paramOrderType)
 
 // case through dataflow
-equal_core(x, y) :- DataFlow(x, y).
+equal_core(x, y) :- DataEdge(x, y, 0).
 
 // case const, change to value analysis later
 equal_core([id1, 1, 0], [id2, 1, 0]) :- 
