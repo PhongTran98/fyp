@@ -8,17 +8,9 @@ equal_core([id1, 1, 0], [id2, 1, 0]) :-
 	Const(id1, _, const1), Const(id2, _, const2), const1 = const2.
 
 
-.decl intraFuncEqual(param1:paramOrderType, param2:paramOrderType) 
-
-intraFuncEqual([a1, a2, a3], [b1, b2, b3]) :-
-	equal_core([a1, a2, a3], [b1, b2, b3]), 
-	getFunction(a1, idFunc, _), getFunction(b1, idFunc, _),
-	inScope(a1), inScope(b1).
-
-
 .decl equal(param1:paramOrderType, param2:paramOrderType) 
 
-equal(x, y) :- intraFuncEqual(x, y).
+equal(x, y) :- equal_core(x, y).
 
 equal(x, y) :- equal(y, x).
 

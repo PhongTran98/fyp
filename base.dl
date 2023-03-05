@@ -32,6 +32,21 @@ astOrder: the order among the sibling in AST tree if (edgeType=AST), otherwise 0
 			opcode:symbol, constType:numtypelabel, constValueI:number, constValueF:float, \
 			label:symbol, offset:unsigned, hasElse:bool)
 
+.decl _inscope(id:unsigned)
+_inscope(id1) :- 
+	_node(id1, "Instruction", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_node(id2, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_node(id3, "Function", funcName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_edge(id3, id2, "AST", _, _, _, _, _, _),
+	_edge(id2, id1, "AST", _, _, _, _, _, _),
+	FunctionInScope(funcName).
+
+_inscope(id) :-
+	_inscope(id2),
+	_edge(id2, id, "AST", _, _, _, _, _, _),
+	_node(id, "Instruction", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
+
+
 .decl _astParentNodeType(id:unsigned, parentType:symbol) 
 
 _astParentNodeType(id, parentType) :-
@@ -44,7 +59,7 @@ _astParentNodeType(id, parentType) :-
 node(id, nodeType, name, index, nargs, nlocals, nresults, isImport, isExport, varType, instType, opcode, constType, constValueI, constValueF, label, offset, hasElse) :-	
 	_node(id, _nodeType, name, index, nargs, nlocals, nresults, isImport, isExport, varType, instType, opcode, constType, constValueI, constValueF, label, offset, hasElse), 
 	_nodeType != "FunctionSignature", _nodeType != "Parameters", _nodeType != "Locals", 
-	_nodeType != "Results", _nodeType != "Trap", _nodeType != "Instructions",
+	_nodeType != "Results", _nodeType != "Trap", _nodeType != "Instructions", _nodeType != "Instruction",
 	(
 		_nodeType != "VarNode", nodeType = _nodeType;		
 		nodeType = "Param", _nodeType = "VarNode", _astParentNodeType(id, parentType), parentType = "Parameters";
@@ -56,18 +71,23 @@ node(id, "Instruction", "None", 0, 0, 0, 0, 0, 0, "None", "Entry", "None", "None
 	_node(id, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
 
 
+node(id, "Instruction", name, index, nargs, nlocals, nresults, isImport, isExport, varType, instType, opcode, constType, constValueI, constValueF, label, offset, hasElse) :-	
+	_node(id, "Instruction", name, index, nargs, nlocals, nresults, isImport, isExport, varType, instType, opcode, constType, constValueI, constValueF, label, offset, hasElse), 
+	_inscope(id).
+
+
+
 .decl edge(src:unsigned, dest:unsigned, edgeType:symbol, label:symbol, pdgType:symbol, constType:symbol, \
 			constValueI:number, constValueF:float, astOrder:unsigned)
 
 // remove edge with deleted endpoint
+// use _node because some 
 edge(src, dest, edgeType, label, pdgType, constType, constValueI, constValueF, astOrder) :-
 	_edge(src, dest, edgeType, label, pdgType, constType, constValueI, constValueF, astOrder),
-	_node(src, _type1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
-	_node(dest, _type2, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
-	_type1 != "FunctionSignature", _type1 != "Parameters", _type1 != "Locals", 
-	_type1 != "Results", _type1 != "Trap", _type1 != "Instructions",
-	_type2 != "FunctionSignature", _type2 != "Parameters", _type2 != "Locals", 
-	_type2 != "Results", _type2 != "Trap", _type2 != "Instructions".
+	node(src, _type1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	node(dest, _type2, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_type1 != "Param", _type1 != "Local", _type1 != "Result",
+	_type2 != "Param", _type2 != "Local", _type2 != "Result".
 
 // connect Function node to children of Parameters, Locals, Results in AST
 edge(src, dest, "AST", "None", "None", "None", 0, 0, 0) :-
