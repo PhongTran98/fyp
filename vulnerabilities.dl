@@ -1,3 +1,4 @@
+// CWE-415 Double Free, CWE-416 Use After Free
 .decl uaf(func:symbol, id1:unsigned, id2:unsigned)
 uaf(func, id1, id2) :- 
 	Instruction(id1, _, _, _, _, _, _, _, _),
@@ -10,6 +11,8 @@ uaf(func, id1, id2) :-
 	Endpoint([id2, 0, x]),
 	equal([id1, 0, 0], [id2, 0, x]),
 	reachCfg(id1, id2).
+
+// CWE-134 Use of Externally-Controlled Format String
 // heuristic: if function call using literal string
 // then the arg is a const value (pointing to .rodata)
 .decl fmtStr(func:symbol, id:unsigned)
@@ -20,3 +23,27 @@ fmtStr(func, id) :-
 	Endpoint([id, 0, 0]),
 	CallPrintf(id),
 	!value([id, 0, 0], _).
+
+// CWE-242 Use of Inherently Dangerous Function
+.decl dangerFunc(func:symbol, id:unsigned)
+dangerFunc(func, id) :-
+	Instruction(id, _, _, _, _, _, _, _, _),
+	getFunction(id, _, func),
+	Call(id, funcNodeId), 
+	FuncName(funcNodeId, calledFunc), 
+	UnsafeFuncName(calledFunc).
+
+// CWE-252 Unchecked Return Value
+.decl uncheckRet(func:symbol, id:unsigned)	
+uncheckRet(func, id) :-
+	Instruction(id, _, _, _, _, _, _, _, _),
+	getFunction(id, _, func),
+	Call(id, funcNodeId),
+	FuncName(funcNodeId, calledFunc),
+	CheckRetFuncName(calledFunc),
+	Drop(id2),
+	CfgEdge(id, id2, _).
+
+	
+
+	

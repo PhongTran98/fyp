@@ -22,3 +22,43 @@ FuncName(id, name) :- Function(id, name, _, _, _, _).
 
 FuncSig(id, nargs, nlocals, nresults) :-
 	Function(id, _, _, nargs, nlocals, nresults).
+
+FunctionInScope(name) :-
+	contains("$CWE", name), 
+	getFunction(_, _, name).
+
+FunctionInScope("$goodB2G1").
+FunctionInScope("$goodB2G2").
+FunctionInScope("$goodG2B1").
+FunctionInScope("$goodG2B2").
+FunctionInScope("$main").
+FunctionInScope("$printWrapper").
+FunctionInScope("$__original_main").
+FunctionInScope("$dangerous_func").
+
+.decl FreeFuncName(name:symbol)
+FreeFuncName("$dlfree").
+
+.decl PrintfFuncName(name:symbol)
+PrintfFuncName("$printf").
+
+.decl UnsafeFuncName(name:symbol)
+UnsafeFuncName("$atoi").
+UnsafeFuncName("$atol").
+UnsafeFuncName("$atof").
+UnsafeFuncName("$atoll").
+UnsafeFuncName("$gets").
+UnsafeFuncName("$strcat").
+UnsafeFuncName("$strcpy").
+UnsafeFuncName("$sprintf").
+
+.decl CheckRetFuncName(name:symbol)
+CheckRetFuncName("$fputs").
+CheckRetFuncName("$fputc").
+CheckRetFuncName("$fread").
+CheckRetFuncName("$fscanf").
+CheckRetFuncName("$fwrite").
+CheckRetFuncName("$putc").
+CheckRetFuncName("$putchar").
+CheckRetFuncName("$puts").
+CheckRetFuncName("$strcpy").
