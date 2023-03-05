@@ -34,10 +34,8 @@ astOrder: the order among the sibling in AST tree if (edgeType=AST), otherwise 0
 
 .decl _inscope(id:unsigned)
 _inscope(id1) :- 
-	_node(id1, "Instruction", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
-	_node(id2, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
-	_node(id3, "Function", funcName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
-	_edge(id3, id2, "AST", _, _, _, _, _, _),
+	_node(id1, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_node(id2, "Function", funcName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
 	_edge(id2, id1, "AST", _, _, _, _, _, _),
 	FunctionInScope(funcName).
 
@@ -68,7 +66,8 @@ node(id, nodeType, name, index, nargs, nlocals, nresults, isImport, isExport, va
 	).
 
 node(id, "Instruction", "None", 0, 0, 0, 0, 0, 0, "None", "Entry", "None", "None", 0, 0, "None", 0, 0) :-	
-	_node(id, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
+	_node(id, "Instructions", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),
+	_inscope(id).
 
 
 node(id, "Instruction", name, index, nargs, nlocals, nresults, isImport, isExport, varType, instType, opcode, constType, constValueI, constValueF, label, offset, hasElse) :-	
