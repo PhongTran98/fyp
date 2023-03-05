@@ -39,9 +39,10 @@ _inscope(id1) :-
 	_edge(id2, id1, "AST", _, _, _, _, _, _),
 	FunctionInScope(funcName).
 
+// should only consider AST, but BeginBlock is not a child
 _inscope(id) :-
 	_inscope(id2),
-	_edge(id2, id, "AST", _, _, _, _, _, _),
+	_edge(id2, id, _, _, _, _, _, _, _),
 	_node(id, "Instruction", _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
 
 

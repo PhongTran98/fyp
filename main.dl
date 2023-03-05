@@ -16,16 +16,11 @@
 .decl test(str:symbol)
 test(str) :-
 	node(_, str, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
-/*
+
 .output uaf
 .output fmtStr
 .output uncheckRet
 .output dangerFunc
-.output DataEdge
-.output mayReadBy
-.output reachArg
-.output overwrittenBy*/
-.output CfgEdge
 
 FunctionInScope(name) :-
 	contains("$CWE", name), 
