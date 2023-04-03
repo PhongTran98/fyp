@@ -23,24 +23,15 @@ FuncName(id, name) :- Function(id, name, _, _, _, _).
 FuncSig(id, nargs, nlocals, nresults) :-
 	Function(id, _, _, nargs, nlocals, nresults).
 
-FunctionInScope(name) :-
-	contains("$CWE", name), 
-	getFunction(_, _, name).
-
-FunctionInScope("$goodB2G1").
-FunctionInScope("$goodB2G2").
-FunctionInScope("$goodG2B1").
-FunctionInScope("$goodG2B2").
-FunctionInScope("$main").
-FunctionInScope("$printWrapper").
-FunctionInScope("$__original_main").
-FunctionInScope("$dangerous_func").
-
 .decl FreeFuncName(name:symbol)
 FreeFuncName("$dlfree").
+FreeFuncName("$operator delete[](void*)"). // fast check, need to fix later
+FreeFuncName("$operator delete(void*)").
 
 .decl PrintfFuncName(name:symbol)
 PrintfFuncName("$printf").
+PrintfFuncName("$vprintf").
+PrintfFuncName("$fprintf").
 
 .decl UnsafeFuncName(name:symbol)
 UnsafeFuncName("$atoi").

@@ -1,17 +1,3 @@
-// CWE-415 Double Free, CWE-416 Use After Free
-.decl uaf(func:symbol, id1:unsigned, id2:unsigned)
-uaf(func, id1, id2) :- 
-	Instruction(id1, _, _, _, _, _, _, _, _),
-	Instruction(id2, _, _, _, _, _, _, _, _),
-	getFunction(id1, _, func), getFunction(id2, _, func),
-
-	Endpoint([id1, 0, 0]),
-	CallFree(id1),
-
-	Endpoint([id2, 0, x]),
-	equal([id1, 0, 0], [id2, 0, x]),
-	reachCfg(id1, id2).
-
 // CWE-134 Use of Externally-Controlled Format String
 // heuristic: if function call using literal string
 // then the arg is a const value (pointing to .rodata)
@@ -43,6 +29,47 @@ uncheckRet(func, id) :-
 	CheckRetFuncName(calledFunc),
 	Drop(id2),
 	CfgEdge(id, id2, _).
+
+// CWE-415 Double Free, CWE-416 Use After Free
+.decl uaf(func:symbol, id1:unsigned, id2:unsigned)
+uaf(func, id1, id2) :- 
+	Instruction(id1, _, _, _, _, _, _, _, _),
+	Instruction(id2, _, _, _, _, _, _, _, _),
+	getFunction(id1, _, func), getFunction(id2, _, func),
+
+	Endpoint([id1, 0, 0]),
+	CallFree(id1),
+
+	Endpoint([id2, 0, x]),
+	equal([id1, 0, 0], [id2, 0, x]),
+	reachCfg(id1, id2).
+
+// CWE-415 Double Free, CWE-416 Use After Free
+.decl df(func:symbol, id1:unsigned, id2:unsigned)
+df(func, id1, id2) :- 
+	Instruction(id1, _, _, _, _, _, _, _, _),
+	Instruction(id2, _, _, _, _, _, _, _, _),
+	getFunction(id1, _, func), getFunction(id2, _, func),
+
+	Endpoint([id1, 0, 0]),
+	CallFree(id1),
+
+	Endpoint([id2, 0, 0]),
+	CallFree(id2),
+	equal([id1, 0, 0], [id2, 0, 0]),
+	reachCfg(id1, id2).
+
+/*
+TODO:
+	CWE122 heap based buffer overflow?
+	CWE369 divide by zero
+	CWE391 unchecked error condition
+	CWE396 catch generic exception
+	CWE397 throw generic exception
+	CWE401 memory leak
+	CWE457 use of uninitialized variable?
+	CWE476 null pointer dereference
+*/
 
 	
 

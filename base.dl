@@ -81,7 +81,6 @@ node(id, "Instruction", name, index, nargs, nlocals, nresults, isImport, isExpor
 			constValueI:number, constValueF:float, astOrder:unsigned)
 
 // remove edge with deleted endpoint
-// use _node because some 
 edge(src, dest, edgeType, label, pdgType, constType, constValueI, constValueF, astOrder) :-
 	_edge(src, dest, edgeType, label, pdgType, constType, constValueI, constValueF, astOrder),
 	node(src, _type1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _),

@@ -13,23 +13,32 @@
 .input _edge(IO=file, delimiter=",", filename="edge.facts")
 .input _node(IO=file, delimiter=",", filename="node.facts")
 
-.decl test(str:symbol)
-test(str) :-
-	node(_, str, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
-
+.decl test(str:paramOrderType)
+test(x) :-
+	equal([123, 0, 0], x).
+	
+.output df
 .output uaf
+//.output equal_core
 .output fmtStr
 .output uncheckRet
 .output dangerFunc
 
 FunctionInScope(name) :-
-	contains("$CWE", name), 
+	(
+		contains("$CWE", name);
+		contains("good", name);
+		contains("bad", name);
+		contains("Good", name);
+		contains("Bad", name)
+	),
 	_node(_, "Function", name, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _).
 
-FunctionInScope("$goodB2G1").
-FunctionInScope("$goodB2G2").
-FunctionInScope("$goodG2B1").
-FunctionInScope("$goodG2B2").
+//FunctionInScope("$goodB2G1").
+//FunctionInScope("$goodB2G2").
+//FunctionInScope("$goodG2B1").
+//FunctionInScope("$goodG2B2").
+
 FunctionInScope("$main").
 FunctionInScope("$printWrapper").
 FunctionInScope("$__original_main").
