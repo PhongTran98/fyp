@@ -24,3 +24,7 @@ docker pull emscripten/emsdk
 - This script compiles a test case into a WebAssembly binary, generates the CPG from the binary using Wasmati, and executes the program using Soufflé. Each of these three steps use a different Docker container to perform the task.
 
 - This script is created specifically to test on Juliet Test cases (in `/test`). To use on other binaries, modify the first of the three steps in `script.sh`.
+
+- `/wasmati` in this repository has some minor changes compared to the original to fix some cmake building errors.
+
+- For more information on the project, see `/docs`.
